@@ -310,6 +310,15 @@ def get_customer_clusters_plot():
         return send_from_directory('static', 'customer_clusters_tenure_monthlycharges.png')
     except Exception as e:
         return jsonify({"error": str(e)})
+    
+# Add this route to your app.py file
+
+@app.route('/get_survival_analysis_plot')
+def get_survival_analysis_plot():
+    try:
+        return send_file("static/survival_analysis_plot.png", mimetype='image/png', as_attachment=True)
+    except Exception as e:
+        return f"Error: {e}", 404
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5001, debug=True)

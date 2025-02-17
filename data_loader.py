@@ -1,4 +1,3 @@
-# Import the required libraries
 import os
 import io
 import numpy as np
@@ -7,7 +6,6 @@ import seaborn as sns
 import matplotlib.ticker as mtick
 import matplotlib.pyplot as plt
 
-# Ensure 'static' directory exists
 if not os.path.exists("static"):
     os.makedirs("static")
 
@@ -108,11 +106,9 @@ telco_data['TotalCharges'] = pd.to_numeric(telco_data['TotalCharges'], errors='c
 
 # Drop rows with missing values
 telco_data.dropna(how='any', inplace=True)
-
-# If you prefer filling missing values with 0 instead of dropping:
 # telco_data.fillna(0, inplace=True)
 
-# Now, use telco_data for all further analysis
+# Using telco_data for all further analysis
 df_churn = telco_data  # Replace the original dataset reference
 
 # Group the tenure into bins of 12 months
@@ -121,7 +117,7 @@ labels = ["{0} - {1}".format(i, i + 11) for i in range(1, 72, 12)]
 # Create a new column 'tenure_group' with the binned values
 telco_data['tenure_group'] = pd.cut(telco_data['tenure'], range(1, 80, 12), right=False, labels=labels)
 
-# The 'tenure_group' column is now added to 'telco_data' but won't be shown on the frontend
+# The 'tenure_group' column is added to 'telco_data' but won't be shown on the frontend
 
 # Calculate the value counts of tenure groups
 tenure_group_counts = telco_data['tenure_group'].value_counts()
@@ -133,7 +129,7 @@ with open("static/tenure_group_counts.txt", "w") as f:
 # Drop 'customerID' and 'tenure' columns from the DataFrame
 telco_data.drop(columns=['customerID'], axis=1, inplace=True)
 
-# Optionally, you can save the head of the data (for reference if needed)
+# Or save the head of the data (for reference if needed)
 telco_data.head().to_csv("static/modified_data_head.csv", index=False)
 
 # Loop through each predictor (except 'Churn', 'TotalCharges', 'MonthlyCharges')
@@ -143,7 +139,7 @@ for i, predictor in enumerate(telco_data.drop(columns=['Churn', 'TotalCharges', 
 
     # Save the plot as an image
     plt.savefig(f"static/{predictor}_countplot.png")
-    plt.close()  # Close the figure to avoid memory issues
+    plt.close()  
 
 # Convert 'Churn' column to binary (1 for 'Yes', 0 for 'No')
 telco_data['Churn'] = np.where(telco_data.Churn == 'Yes', 1, 0)
@@ -229,7 +225,6 @@ sns.heatmap(telco_data_dummies.corr(), cmap="Paired")
 plt.savefig("static/correlation_heatmap.png", bbox_inches='tight')
 plt.close()
 
-# Assuming telco_data is already loaded in the code
 new_df1_target0 = telco_data.loc[telco_data["Churn"] == 0]
 new_df1_target1 = telco_data.loc[telco_data["Churn"] == 1]
 
@@ -262,7 +257,7 @@ uniplot(new_df1_target1, col='Contract', title='Distribution of Contract for Chu
 uniplot(new_df1_target1, col='TechSupport', title='Distribution of TechSupport for Churned Customers', hue='gender')
 uniplot(new_df1_target1, col='SeniorCitizen', title='Distribution of SeniorCitizen for Churned Customers', hue='gender')
 
-# Example DataFrame df_churn (replace with your actual DataFrame)
+
 num_cols = ['tenure', 'MonthlyCharges', 'TotalCharges']
 for col in num_cols:
     plt.figure(figsize=(8, 4))
@@ -322,3 +317,20 @@ sns.scatterplot(x=df_encoded['tenure'], y=df_encoded['MonthlyCharges'], hue=df_e
 plt.title("Customer Clusters based on Tenure and Monthly Charges")
 plt.savefig("static/customer_clusters_tenure_monthlycharges.png", bbox_inches='tight')
 plt.close()
+
+import lifelines
+from lifelines import KaplanMeierFitter
+
+# Fit the Kaplan-Meier estimator
+kmf = KaplanMeierFitter()
+plt.figure(figsize=(8, 5))
+kmf.fit(df_churn["tenure"], event_observed=df_churn["Churn"].replace({"Yes": 1, "No": 0}))
+
+# Plot the survival function
+kmf.plot_survival_function()
+plt.title("Customer Survival Analysis (Tenure before Churn)")
+plt.xlabel("Months")
+plt.ylabel("Survival Probability")
+
+plt.savefig("static/survival_analysis_plot.png", bbox_inches='tight')
+plt.close()  
